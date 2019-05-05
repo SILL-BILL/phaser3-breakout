@@ -28,9 +28,11 @@ var MainScene = /** @class */ (function (_super) {
     }
     MainScene.prototype.preload = function () {
         this.load.image('bg', 'src/img/bg.png');
+        this.load.image('bg-head', 'src/img/bg-head.png');
     };
     MainScene.prototype.create = function () {
         this.m_Bg = this.add.image(Config.CANVAS_WIDTH / 2, Config.CANVAS_HEIGHT / 2, 'bg');
+        this.m_Header = this.physics.add.staticGroup().create(Config.CANVAS_WIDTH / 2, 60, 'bg-head');
     };
     MainScene.prototype.update = function (_time, _delta) {
     };

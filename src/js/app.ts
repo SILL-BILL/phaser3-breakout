@@ -13,6 +13,7 @@ class Config {
 class MainScene extends Phaser.Scene {
 
 	private m_Bg:Phaser.GameObjects.Image;
+	private m_Header:any;
 
 	constructor(){
 		super({ key: 'MainScene' });
@@ -20,9 +21,13 @@ class MainScene extends Phaser.Scene {
 	
 	public preload():void{
 		this.load.image('bg', 'src/img/bg.png');
+		this.load.image('bg-head', 'src/img/bg-head.png');
 	}
 	public create():void{
 		this.m_Bg = this.add.image(Config.CANVAS_WIDTH/2,Config.CANVAS_HEIGHT/2,'bg');
+
+		this.m_Header = this.physics.add.staticGroup().create(Config.CANVAS_WIDTH/2,60, 'bg-head');
+
 	}
 	public update(_time,_delta):void{
 	}
