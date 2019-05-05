@@ -1,0 +1,104 @@
+{
+	"textures": [
+		{
+			"image": "sprite.png",
+			"format": "RGBA8888",
+			"size": {
+				"w": 960,
+				"h": 1380
+			},
+			"scale": 1,
+			"frames": [
+				{
+					"filename": "horizontal",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 960,
+						"h": 50
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 960,
+						"h": 50
+					},
+					"frame": {
+						"x": 0,
+						"y": 0,
+						"w": 960,
+						"h": 50
+					}
+				},
+				{
+					"filename": "horizontal-red",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 960,
+						"h": 50
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 960,
+						"h": 50
+					},
+					"frame": {
+						"x": 0,
+						"y": 50,
+						"w": 960,
+						"h": 50
+					}
+				},
+				{
+					"filename": "vertical",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 50,
+						"h": 1280
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 50,
+						"h": 1280
+					},
+					"frame": {
+						"x": 0,
+						"y": 100,
+						"w": 50,
+						"h": 1280
+					}
+				},
+				{
+					"filename": "vertical-red",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 50,
+						"h": 1280
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 50,
+						"h": 1280
+					},
+					"frame": {
+						"x": 50,
+						"y": 100,
+						"w": 50,
+						"h": 1280
+					}
+				}
+			]
+		}
+	],
+	"meta": {
+		"app": "https://www.codeandweb.com/texturepacker",
+		"version": "3.0",
+		"smartupdate": "$TexturePacker:SmartUpdate:135a67de92aad398e1422e92b4b5d16f:20fb72c91dbb9aabb79a79f7f6097e0a:68d88b3cf7eafc9b5accfffdfb2fda91$"
+	}
+}

@@ -15,6 +15,13 @@ $COLOR_YELLOW : #FFFF00;
 	display: block;
 	width: 100%;
 }
+@mixin BgRainbow {
+	background: #83b6e6; // Old browsers
+	background: -moz-linear-gradient(45deg, #83b6e6 0%, #42c1cc 15%, #4eca92 28%, #77c044 43%, #f2c449 60%, #f2c449 63%, #ee879d 85%, #838ae6 100%); // FF3.6-15
+	background: -webkit-linear-gradient(45deg, #83b6e6 0%,#42c1cc 15%,#4eca92 28%,#77c044 43%,#f2c449 60%,#f2c449 63%,#ee879d 85%,#838ae6 100%); // Chrome10-25,Safari5.1-6
+	background: linear-gradient(45deg, #83b6e6 0%,#42c1cc 15%,#4eca92 28%,#77c044 43%,#f2c449 60%,#f2c449 63%,#ee879d 85%,#838ae6 100%); // W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#83b6e6', endColorstr='#838ae6',GradientType=1 ); // IE6-9 fallback on horizontal gradient
+}
 
 // components
 
@@ -54,5 +61,5 @@ $COLOR_YELLOW : #FFFF00;
 
 // game
 .game {
-	background-color: $COLOR_BLUE_GRAY;
+	@include BgRainbow;
 }

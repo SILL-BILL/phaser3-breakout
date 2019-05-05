@@ -3,9 +3,13 @@
 class Config {
 	public static readonly CANVAS_WIDTH:number = 960;
 	public static readonly CANVAS_HEIGHT:number = 1280;
-	public static readonly TIME_OUT:number = 300 * 1000;
-	public static readonly BLOCK_MAX:number = 60;
+	public static readonly TIME_OUT:number = 3 * 1000;
+	public static readonly POINT:number = 10;
+	public static readonly LIVES:number = 2;
 
+	/**
+		@summary コンストラクタ
+	*/
 	constructor(){
 	}
 }
@@ -13,23 +17,185 @@ class Config {
 class MainScene extends Phaser.Scene {
 
 	private m_Bg:Phaser.GameObjects.Image;
-	private m_Header:any;
+	private m_Header:Phaser.Physics.Arcade.Image;
 
+	private m_LivesText:Phaser.GameObjects.Text;
+	private m_LivesCnt:number;
+
+	private m_ScoreText:Phaser.GameObjects.Text;
+	private m_Score:number;
+
+	private m_BallGroup:Phaser.GameObjects.Group;
+	private m_Ball:Phaser.Physics.Arcade.Image;
+	private m_BallCnt:number;
+
+	private m_VausGroup:Phaser.GameObjects.Group;
+	private m_Vaus:Phaser.Physics.Arcade.Image;
+
+	private m_BlockGroup:Phaser.GameObjects.Group;
+	private m_BlockCnt:number;
+
+	private m_EraserGroup:Phaser.GameObjects.Group;
+	private m_Eraser:Phaser.Physics.Arcade.Image;
+
+	/**
+		@summary コンストラクタ
+	*/
 	constructor(){
 		super({ key: 'MainScene' });
+		this.m_LivesCnt = Config.LIVES;
+		this.m_Score = 0;
+		this.m_BallCnt = 0;
+		this.m_BlockCnt = 0;
 	}
-	
+	/**
+		@summary プリロード処理
+	*/
 	public preload():void{
 		this.load.image('bg', 'src/img/bg.png');
 		this.load.image('bg-head', 'src/img/bg-head.png');
+		this.load.image('ball', 'src/img/ball.png');
+		this.load.image('vaus', 'src/img/vaus.png');
+		this.load.atlas('block', 'src/img/block/sprite.png', 'src/img/block/sprite.json');
+		this.load.atlas('wall', 'src/img/wall/sprite.png', 'src/img/wall/sprite.json');
 	}
+	/**
+		@summary 生成処理
+	*/
 	public create():void{
-		this.m_Bg = this.add.image(Config.CANVAS_WIDTH/2,Config.CANVAS_HEIGHT/2,'bg');
 
-		this.m_Header = this.physics.add.staticGroup().create(Config.CANVAS_WIDTH/2,60, 'bg-head');
+		this.physics.world.setBoundsCollision(true, true, true, false);
+
+		this.m_Bg = this.add.image(Config.CANVAS_WIDTH/2,Config.CANVAS_HEIGHT/2,'bg');
+		this.m_Header = this.physics.add.staticImage(Config.CANVAS_WIDTH/2, 60, 'bg-head');
+		this.m_ScoreText = this.add.text(
+			0,30,
+			'Score : '+this.m_Score.toString(),
+			{fontFamily:'Arial', fontSize:48, color:'#f5f5f5'}
+		);
+		this.m_LivesText = this.add.text(
+			Config.CANVAS_WIDTH/2,30,
+			'Lives : '+this.m_LivesCnt.toString(),
+			{fontFamily:'Arial', fontSize:48, color:'#f5f5f5'}
+		);
+
+		this.m_BallGroup = this.physics.add.group();
+		this.m_VausGroup = this.physics.add.group({immovable:true});
+		this.m_BlockGroup = this.physics.add.group({immovable:true});
+		this.m_EraserGroup = this.physics.add.staticGroup();
+		this.physics.add.collider(this.m_BallGroup, this.m_Header);
+		this.physics.add.collider(this.m_BallGroup, this.m_BlockGroup, this.onBlockHit, null, this);
+		this.physics.add.collider(this.m_BallGroup, this.m_VausGroup, this.onVausHit, null, this);
+		this.physics.add.collider(this.m_BallGroup, this.m_EraserGroup, this.onEraserHit, null, this);
+
+		this.createBlock(6, 10);
+
+		this.m_Vaus = this.m_VausGroup.create(Config.CANVAS_WIDTH / 2, 1100, 'vaus');
+
+		this.m_Ball = this.m_BallGroup.create(Config.CANVAS_WIDTH / 2, 1000, 'ball').setCollideWorldBounds(true).setBounce(1).setVelocity(-180,-600);
+		this.m_BallCnt++;
+
+		this.m_Eraser = this.m_EraserGroup.create(Config.CANVAS_WIDTH/2, Config.CANVAS_HEIGHT+25, 'wall', 'horizontal-red');
 
 	}
+	/**
+		@summary 更新処理
+	*/
 	public update(_time,_delta):void{
+
+		this.m_Vaus.x = this.game.input.activePointer.x;
+		if (this.m_Vaus.x < 96)
+		{
+			this.m_Vaus.x = 96;
+		}
+		else if (this.m_Vaus.x > Config.CANVAS_WIDTH - 96)
+		{
+			this.m_Vaus.x = Config.CANVAS_WIDTH - 96;
+		}
+
+		if(this.m_LivesCnt < 0)
+		{
+			console.log('Game Over!');
+		}
+
+		if(this.m_BlockCnt <= 0)
+		{
+			console.log('Game Clear!');
+		}
+	}
+	/**
+		@summary ブロックヒット時
+	*/
+	private onBlockHit(_ball:Phaser.Physics.Arcade.Sprite, _block:Phaser.Physics.Arcade.Sprite):void {
+		_block.destroy();
+		this.m_Score += Config.POINT;
+		this.m_ScoreText.text = 'Score : '+this.m_Score;
+		this.m_BlockCnt--;
+		console.log('BlockCnt : '+this.m_BlockCnt);
+	}
+	/**
+		@summary バウス(ラケット)ヒット時
+	*/
+	private onVausHit(_ball:Phaser.Physics.Arcade.Image, _vaus:Phaser.Physics.Arcade.Image):void {
+
+		let diff = 0;
+
+		if (_ball.x < _vaus.x)
+		{
+			//  Ball is on the left-hand side of the paddle
+			diff = _vaus.x - _ball.x;
+			_ball.setVelocityX(-10 * diff);
+		}
+		else if (_ball.x > _vaus.x)
+		{
+			//  Ball is on the right-hand side of the paddle
+			diff = _ball.x -_vaus.x;
+			_ball.setVelocityX(10 * diff);
+		}
+		else
+		{
+			//  Ball is perfectly in the middle
+			//  Add a little random X to stop it bouncing straight up!
+			_ball.setVelocityX(2 + Math.random() * 8);
+		}
+	}
+	/**
+		@summary イレーサーヒット時
+	*/
+	private onEraserHit(_ball:Phaser.Physics.Arcade.Image, _eraser:Phaser.Physics.Arcade.Image):void {
+		_ball.destroy();
+		this.m_BallCnt--;
+		if(this.m_BallCnt <= 0){
+			this.m_LivesCnt--;
+			this.m_LivesText.text = 'Lives : '+this.m_LivesCnt.toString();
+		}
+	}
+	/**
+		@summary ブロック生成
+	*/
+	private createBlock(_row:number, _column:number):void {
+
+		let frames:string[] = this.textures.get('block').getFrameNames();
+
+		let block_width:number = 96;
+		let block_height:number = 48;
+		let block_offset_x:number = block_width / 2;
+		let block_offset_y:number = block_height / 2;
+
+		for(let i:number = 0; i < _row; i++)
+		{
+			for(let j:number = 0; j < _column; j++)
+			{
+				this.m_BlockGroup.create(
+					block_width * j + block_offset_x,
+					block_height * i + block_offset_y + 280,
+					'block', frames[i%6]
+				);
+				this.m_BlockCnt++;
+			}
+		}
+
+		console.log(this.m_BlockCnt);
 	}
 }
 
@@ -51,8 +217,8 @@ class Main {
 			physics:{
 				default:'arcade',
 				arcade:{
-					gravity: { y:100 },
-					debug: true
+					// gravity: { y:100 },
+					debug: false
 				}
 			},
 			scene: [MainScene]
