@@ -1,0 +1,2 @@
+.container{display:block;width:100%;overflow:hidden;position:relative;height:100%;z-index:0}.main{display:block;width:100%;position:absolute;height:100%;z-index:1}.main .cv-wrap{display:block;width:100%;position:relative;height:100%;z-index:0}.main .cv-wrap>canvas{display:block;position:absolute;width:auto;height:auto;top:0;left:0;right:0;margin:auto;z-index:1}.game{background-color:#263238}
+/*# sourceMappingURL=style.css.map */
