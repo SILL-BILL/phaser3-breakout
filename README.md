@@ -1,3 +1,3 @@
 # [ブロックくずし](https://sill-bill.github.io/phaser3-breakout/)  
 
-**工事中だよ**
+**ベータ版(0.1.0)をリリースしました。**
