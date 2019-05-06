@@ -12,26 +12,84 @@ var __extends = (this && this.__extends) || (function () {
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     };
 })();
+/**
+    @summary Configクラス
+*/
 var Config = /** @class */ (function () {
     /**
         @summary コンストラクタ
     */
     function Config() {
     }
+    Config.VERSION = '0.1.0';
     Config.CANVAS_WIDTH = 960;
     Config.CANVAS_HEIGHT = 1280;
     Config.TIME_OUT = 3 * 1000;
     Config.POINT = 10;
     Config.LIVES = 2;
+    Config.SceneNames = {
+        'Title': 'TitleScene',
+        'Main': 'MainScene'
+    };
     return Config;
 }());
+/**
+    @summary TitleSceneクラス
+*/
+var TitleScene = /** @class */ (function (_super) {
+    __extends(TitleScene, _super);
+    /**
+        @summary コンストラクタ
+    */
+    function TitleScene() {
+        return _super.call(this, { key: Config.SceneNames.Title }) || this;
+    }
+    /**
+        @summary プリロード処理
+    */
+    TitleScene.prototype.preload = function () {
+        this.load.image('bg', 'src/img/bg.png');
+        this.load.image('logo', 'src/img/logo.png');
+        this.load.image('copyright', 'src/img/copyright.png');
+        this.load.image('btn-start', 'src/img/btn-start.png');
+    };
+    /**
+        @summary 生成処理
+    */
+    TitleScene.prototype.create = function () {
+        var _this = this;
+        this.m_Bg = this.add.image(Config.CANVAS_WIDTH / 2, Config.CANVAS_HEIGHT / 2, 'bg');
+        this.m_Logo = this.add.image(Config.CANVAS_WIDTH / 2, 440, 'logo');
+        this.m_Copyright = this.add.image(Config.CANVAS_WIDTH / 2, Config.CANVAS_HEIGHT - 50, 'copyright');
+        this.m_VersionText = this.add.text(Config.CANVAS_WIDTH - 30, 30, 'Version : ' + Config.VERSION, { fontFamily: 'Arial', fontSize: 28, color: '#f5f5f5' }).setOrigin(1, 0);
+        this.m_BtnStart = this.add.image(Config.CANVAS_WIDTH / 2, Config.CANVAS_HEIGHT / 2 + 340, 'btn-start').setInteractive();
+        this.m_BtnStart.on('pointerup', function () {
+            _this.translateScene(Config.SceneNames.Main);
+        }, this);
+    };
+    /**
+        @summary 更新処理
+    */
+    TitleScene.prototype.update = function (_time, _delta) {
+    };
+    /**
+        @summary シーン遷移
+    */
+    TitleScene.prototype.translateScene = function (_sceneName) {
+        this.scene.start(_sceneName);
+    };
+    return TitleScene;
+}(Phaser.Scene));
+/**
+    @summary MainSceneクラス
+*/
 var MainScene = /** @class */ (function (_super) {
     __extends(MainScene, _super);
     /**
         @summary コンストラクタ
     */
     function MainScene() {
-        var _this = _super.call(this, { key: 'MainScene' }) || this;
+        var _this = _super.call(this, { key: Config.SceneNames.Main }) || this;
         _this.m_GameState = {
             'Init': 0,
             'Wait': 1,
@@ -40,13 +98,6 @@ var MainScene = /** @class */ (function (_super) {
             'GameOver': 4,
             'End': 5
         };
-        _this.m_LivesCnt = Config.LIVES;
-        _this.m_Score = 0;
-        _this.m_BallCnt = 0;
-        _this.m_BlockCnt = 0;
-        _this.m_CurrentGameState = _this.m_GameState.Init;
-        _this.m_TimeElapsed = 0;
-        console.log(_this.m_CurrentGameState);
         return _this;
     }
     /**
@@ -57,6 +108,8 @@ var MainScene = /** @class */ (function (_super) {
         this.load.image('bg-head', 'src/img/bg-head.png');
         this.load.image('ball', 'src/img/ball.png');
         this.load.image('vaus', 'src/img/vaus.png');
+        this.load.image('game_clear', 'src/img/game_clear.png');
+        this.load.image('game_over', 'src/img/game_over.png');
         this.load.atlas('block', 'src/img/block/sprite.png', 'src/img/block/sprite.json');
         this.load.atlas('wall', 'src/img/wall/sprite.png', 'src/img/wall/sprite.json');
     };
@@ -65,6 +118,13 @@ var MainScene = /** @class */ (function (_super) {
     */
     MainScene.prototype.create = function () {
         var _this = this;
+        //初期化
+        this.m_CurrentGameState = this.m_GameState.Init;
+        this.m_LivesCnt = Config.LIVES;
+        this.m_Score = 0;
+        this.m_BallCnt = 0;
+        this.m_BlockCnt = 0;
+        this.m_TimeElapsed = 0;
         this.physics.world.setBoundsCollision(true, true, true, false); //ワールドのコライダーを設定
         this.m_Bg = this.add.image(Config.CANVAS_WIDTH / 2, Config.CANVAS_HEIGHT / 2, 'bg');
         this.m_Header = this.physics.add.staticImage(Config.CANVAS_WIDTH / 2, 60, 'bg-head');
@@ -80,7 +140,7 @@ var MainScene = /** @class */ (function (_super) {
         this.physics.add.collider(this.m_BallGroup, this.m_VausGroup, this.onVausHit, null, this);
         this.physics.add.collider(this.m_BallGroup, this.m_EraserGroup, this.onEraserHit, null, this);
         //ブロック生成
-        this.createBlock(6, 10);
+        this.createBlock(6, 8);
         //バウス(ラケット)生成
         this.m_Vaus = this.m_VausGroup.create(Config.CANVAS_WIDTH / 2, 1100, 'vaus');
         //ボール生成
@@ -115,13 +175,22 @@ var MainScene = /** @class */ (function (_super) {
         if ((this.m_CurrentGameState == this.m_GameState.Run || this.m_CurrentGameState == this.m_GameState.Wait) && this.m_LivesCnt < 0) {
             this.m_CurrentGameState = this.m_GameState.GameOver;
             console.log('Game Over!');
-        }
-        else if (this.m_CurrentGameState == this.m_GameState.GameOver) {
-            //TODO
+            this.add.image(Config.CANVAS_WIDTH / 2, Config.CANVAS_HEIGHT / 2, 'game_over');
         }
         if (this.m_CurrentGameState == this.m_GameState.Run && this.m_BlockCnt <= 0) {
             this.m_CurrentGameState = this.m_GameState.GameClear;
             console.log('Game Clear!');
+            this.add.image(Config.CANVAS_WIDTH / 2, Config.CANVAS_HEIGHT / 2, 'game_clear');
+        }
+        if (this.m_CurrentGameState == this.m_GameState.GameOver ||
+            this.m_CurrentGameState == this.m_GameState.GameClear) {
+            if (this.m_TimeElapsed >= Config.TIME_OUT) {
+                this.m_CurrentGameState = this.m_GameState.End;
+                this.translateScene(Config.SceneNames.Title);
+            }
+            else {
+                this.m_TimeElapsed += _delta;
+            }
         }
     };
     /**
@@ -132,7 +201,7 @@ var MainScene = /** @class */ (function (_super) {
         this.m_Score += Config.POINT;
         this.m_ScoreText.text = 'Score : ' + this.m_Score;
         this.m_BlockCnt--;
-        console.log('BlockCnt : ' + this.m_BlockCnt);
+        // console.log('BlockCnt : '+this.m_BlockCnt);
     };
     /**
         @summary バウス(ラケット)ヒット時
@@ -177,9 +246,10 @@ var MainScene = /** @class */ (function (_super) {
         var block_height = 48;
         var block_offset_x = block_width / 2;
         var block_offset_y = block_height / 2;
+        var b = (Config.CANVAS_WIDTH - (block_width * _column)) / 2;
         for (var i = 0; i < _row; i++) {
             for (var j = 0; j < _column; j++) {
-                this.m_BlockGroup.create(block_width * j + block_offset_x, block_height * i + block_offset_y + 280, 'block', frames[i % 6]);
+                this.m_BlockGroup.create(block_width * j + block_offset_x + b, block_height * i + block_offset_y + 280, 'block', frames[i % 6]);
                 this.m_BlockCnt++;
             }
         }
@@ -203,6 +273,9 @@ var MainScene = /** @class */ (function (_super) {
     };
     return MainScene;
 }(Phaser.Scene));
+/**
+    @summary Mainクラス
+*/
 var Main = /** @class */ (function () {
     function Main(_canvasParent) {
         this.m_PhaserGameConfig = {
@@ -216,11 +289,10 @@ var Main = /** @class */ (function () {
             physics: {
                 "default": 'arcade',
                 arcade: {
-                    // gravity: { y:100 },
-                    debug: true
+                    debug: false
                 }
             },
-            scene: [MainScene]
+            scene: [TitleScene, MainScene]
         };
         this.m_PhaserGame = new Phaser.Game(this.m_PhaserGameConfig);
     }

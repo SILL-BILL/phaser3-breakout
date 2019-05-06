@@ -1,11 +1,21 @@
 /// <reference path="phaser-3.16.2/phaser.d.ts"/>
 
+
+/**
+	@summary Configクラス
+*/
 class Config {
+	public static readonly VERSION:string = '0.1.0';
 	public static readonly CANVAS_WIDTH:number = 960;
 	public static readonly CANVAS_HEIGHT:number = 1280;
 	public static readonly TIME_OUT:number = 3 * 1000;
 	public static readonly POINT:number = 10;
 	public static readonly LIVES:number = 2;
+
+	public static readonly SceneNames = {
+		'Title':'TitleScene',
+		'Main' :'MainScene'
+	}
 
 	/**
 		@summary コンストラクタ
@@ -14,6 +24,67 @@ class Config {
 	}
 }
 
+/**
+	@summary TitleSceneクラス
+*/
+class TitleScene extends Phaser.Scene {
+
+	private m_Bg:Phaser.GameObjects.Image;
+	private m_Logo:Phaser.GameObjects.Image;
+	private m_Copyright:Phaser.GameObjects.Image;
+	private m_VersionText:Phaser.GameObjects.Text;
+	private m_BtnStart:Phaser.GameObjects.Image;
+
+	/**
+		@summary コンストラクタ
+	*/
+	constructor() {
+		super({ key: Config.SceneNames.Title });
+	}
+	/**
+		@summary プリロード処理
+	*/
+	public preload():void{
+		this.load.image('bg', 'src/img/bg.png');
+		this.load.image('logo', 'src/img/logo.png');
+		this.load.image('copyright', 'src/img/copyright.png');
+		this.load.image('btn-start', 'src/img/btn-start.png');
+	}
+	/**
+		@summary 生成処理
+	*/
+	public create():void{
+		this.m_Bg = this.add.image(Config.CANVAS_WIDTH/2,Config.CANVAS_HEIGHT/2,'bg');
+		this.m_Logo = this.add.image(Config.CANVAS_WIDTH/2,440,'logo');
+		this.m_Copyright = this.add.image(Config.CANVAS_WIDTH/2,Config.CANVAS_HEIGHT-50,'copyright');
+
+		this.m_VersionText = this.add.text(
+			Config.CANVAS_WIDTH-30,30,
+			'Version : '+Config.VERSION,
+			{fontFamily:'Arial', fontSize:28, color:'#f5f5f5'}
+		).setOrigin(1, 0);
+
+		this.m_BtnStart = this.add.image(Config.CANVAS_WIDTH/2,Config.CANVAS_HEIGHT/2+340,'btn-start').setInteractive();
+		this.m_BtnStart.on('pointerup', ()=>{
+			this.translateScene(Config.SceneNames.Main);
+		}, this);
+	}
+	/**
+		@summary 更新処理
+	*/
+	public update(_time,_delta):void{
+	}
+	/**
+		@summary シーン遷移
+	*/
+	private translateScene(_sceneName:string):void{
+		this.scene.start(_sceneName);
+	}
+}
+
+/**
+	@summary MainSceneクラス
+*/
 class MainScene extends Phaser.Scene {
 
 	private m_Bg:Phaser.GameObjects.Image;
@@ -55,16 +126,7 @@ class MainScene extends Phaser.Scene {
 		@summary コンストラクタ
 	*/
 	constructor(){
-		super({ key: 'MainScene' });
-		this.m_LivesCnt = Config.LIVES;
-		this.m_Score = 0;
-		this.m_BallCnt = 0;
-		this.m_BlockCnt = 0;
-		this.m_CurrentGameState = this.m_GameState.Init;
-		this.m_TimeElapsed = 0;
-
-console.log(this.m_CurrentGameState);
-
+		super({ key: Config.SceneNames.Main });
 	}
 	/**
 		@summary プリロード処理
@@ -74,6 +136,8 @@ console.log(this.m_CurrentGameState);
 		this.load.image('bg-head', 'src/img/bg-head.png');
 		this.load.image('ball', 'src/img/ball.png');
 		this.load.image('vaus', 'src/img/vaus.png');
+		this.load.image('game_clear', 'src/img/game_clear.png');
+		this.load.image('game_over', 'src/img/game_over.png');
 		this.load.atlas('block', 'src/img/block/sprite.png', 'src/img/block/sprite.json');
 		this.load.atlas('wall', 'src/img/wall/sprite.png', 'src/img/wall/sprite.json');
 	}
@@ -81,6 +145,14 @@ console.log(this.m_CurrentGameState);
 		@summary 生成処理
 	*/
 	public create():void{
+
+		//初期化
+		this.m_CurrentGameState = this.m_GameState.Init;
+		this.m_LivesCnt = Config.LIVES;
+		this.m_Score = 0;
+		this.m_BallCnt = 0;
+		this.m_BlockCnt = 0;
+		this.m_TimeElapsed = 0;
 
 		this.physics.world.setBoundsCollision(true, true, true, false); //ワールドのコライダーを設定
 
@@ -108,7 +180,7 @@ console.log(this.m_CurrentGameState);
 		this.physics.add.collider(this.m_BallGroup, this.m_EraserGroup, this.onEraserHit, null, this);
 
 		//ブロック生成
-		this.createBlock(6, 10);
+		this.createBlock(6, 8);
 
 		//バウス(ラケット)生成
 		this.m_Vaus = this.m_VausGroup.create(Config.CANVAS_WIDTH / 2, 1100, 'vaus');
@@ -157,16 +229,36 @@ console.log(this.m_CurrentGameState);
 		{
 			this.m_CurrentGameState = this.m_GameState.GameOver;
 			console.log('Game Over!');
-		}
-		else if(this.m_CurrentGameState == this.m_GameState.GameOver)
-		{
-//TODO
+			this.add.image(
+				Config.CANVAS_WIDTH/2,
+				Config.CANVAS_HEIGHT/2,
+				'game_over'
+			);
 		}
 
 		if(this.m_CurrentGameState == this.m_GameState.Run && this.m_BlockCnt <= 0)
 		{
 			this.m_CurrentGameState = this.m_GameState.GameClear;
 			console.log('Game Clear!');
+			this.add.image(
+				Config.CANVAS_WIDTH/2,
+				Config.CANVAS_HEIGHT/2,
+				'game_clear'
+			);
+		}
+
+		if(this.m_CurrentGameState == this.m_GameState.GameOver || 
+			this.m_CurrentGameState == this.m_GameState.GameClear)
+		{
+			if(this.m_TimeElapsed >= Config.TIME_OUT)
+			{
+				this.m_CurrentGameState = this.m_GameState.End;
+				this.translateScene(Config.SceneNames.Title);
+			}
+			else
+			{
+				this.m_TimeElapsed += _delta;
+			}
 		}
 	}
 	/**
@@ -177,7 +269,7 @@ console.log(this.m_CurrentGameState);
 		this.m_Score += Config.POINT;
 		this.m_ScoreText.text = 'Score : '+this.m_Score;
 		this.m_BlockCnt--;
-		console.log('BlockCnt : '+this.m_BlockCnt);
+		// console.log('BlockCnt : '+this.m_BlockCnt);
 	}
 	/**
 		@summary バウス(ラケット)ヒット時
@@ -232,13 +324,14 @@ console.log(this.m_CurrentGameState);
 		let block_height:number = 48;
 		let block_offset_x:number = block_width / 2;
 		let block_offset_y:number = block_height / 2;
+		let b = (Config.CANVAS_WIDTH - (block_width * _column)) / 2;
 
 		for(let i:number = 0; i < _row; i++)
 		{
 			for(let j:number = 0; j < _column; j++)
 			{
 				this.m_BlockGroup.create(
-					block_width * j + block_offset_x,
+					block_width * j + block_offset_x + b,
 					block_height * i + block_offset_y + 280,
 					'block', frames[i%6]
 				);
@@ -267,6 +360,9 @@ console.log(this.m_CurrentGameState);
 	}
 }
 
+/**
+	@summary Mainクラス
+*/
 class Main {
 
 	public m_PhaserGameConfig:GameConfig;
@@ -285,11 +381,10 @@ class Main {
 			physics:{
 				default:'arcade',
 				arcade:{
-					// gravity: { y:100 },
-					debug: true
+					debug: false
 				}
 			},
-			scene: [MainScene]
+			scene: [TitleScene,MainScene]
 		}
 
 		this.m_PhaserGame = new Phaser.Game(this.m_PhaserGameConfig);

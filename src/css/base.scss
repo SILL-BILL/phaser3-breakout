@@ -391,12 +391,12 @@ nav, section {
 		z-index: 1;
 	}
 	&.line-red {
-		:before{
+		&:before{
 			background-color: $COLOR_RED;
 		}
 	}
 	&.line-green {
-		:before {
+		&:before {
 			background-color: $COLOR_GREEN;
 		}
 	}
@@ -431,7 +431,7 @@ nav, section {
 	margin-bottom: 5%;
 	position: relative;
 	z-index: 0;
-	:before,:after {
+	&:before,&:after {
 		background: $COLOR_GRAY;
 		content: "";
 		@include Block100Pct;
@@ -441,7 +441,7 @@ nav, section {
 		left: 0;
 		z-index: 1;
 	}
-	:after {
+	&:after {
 		top: auto;
 		bottom: 0;
 	}
